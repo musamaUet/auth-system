@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+    nodejs:
+        build: .
+        command: npm run start
+        volumes: 
+            - '.:/usr/src/auth-system-complete'
+            - '.:/usr/src/auth-system-complete/node_modules/'
+        image: auth-system-complete
+        env_file: .env
+        environment: 
+            DATABASE_URL: "postgres://postgres:postgres@db:5432/auth_system"
+            HOST: db
+        ports:
+            - "3000:3000"
+    postgres:
+        image: postgres:9.6.2-alpine
+        ports:
+            - "5432:5432"
+        environment: 
+            DATABASE_URL: "postgres://postgres:postgres@db:5432/auth_system"
+            USER: "postgres"
+            PASSWORD: "postgres"
+            DB: auth_system
+            PORT: 5432
+            HOST: db
