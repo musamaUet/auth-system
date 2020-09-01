@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-    const Post = sequelize.define('post', {
+    const Post = sequelize.define('uploadfile', {
         id: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
@@ -8,14 +8,6 @@ module.exports = (sequelize, Sequelize) => {
         },
         title: {
             type: Sequelize.STRING
-        },
-        profile_img_id:{
-            type:Sequelize.INTEGER,
-            allowNull:false,
-            refrences:{
-                model:'Profile',
-                key:'id',
-            }
         },
         post_username: {
             type: Sequelize.STRING,
@@ -38,10 +30,6 @@ module.exports = (sequelize, Sequelize) => {
             onDelete: 'cascade',
             foreignKey: 'post_username'
         });
-        Post.belongsTo(models.Profile,{
-            onDelete: 'cascade',
-            foreignKey:'profile_img_id'
-        })
     }
 
     sequelize.sync().then(() => {

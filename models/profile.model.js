@@ -1,21 +1,19 @@
 module.exports = (sequelize, Sequelize) => {
-    const Post = sequelize.define('post', {
+    const Profile = sequelize.define('profile', {
         id: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
             primaryKey: true,
             allowNull: false
         },
-        title: {
-            type: Sequelize.STRING
+        data:{
+            type:Sequelize.BLOB("long"),
         },
-        profile_img_id:{
-            type:Sequelize.INTEGER,
-            allowNull:false,
-            refrences:{
-                model:'Profile',
-                key:'id',
-            }
+        name:{
+            type:Sequelize.STRING
+        },
+        type: {
+            type: Sequelize.STRING,
         },
         post_username: {
             type: Sequelize.STRING,
@@ -24,30 +22,24 @@ module.exports = (sequelize, Sequelize) => {
                 model: 'Users',
                 key: 'username'
             }
-        },
-        description: {
-            type: Sequelize.STRING
-        },
-        published: {
-            type: Sequelize.BOOLEAN
         }
     });
 
-    Post.associate = (models) => {
-        Post.hasMany(models.User, {
+    Profile.associate = (models) => {
+        Profile.hasMany(models.User, {
             onDelete: 'cascade',
             foreignKey: 'post_username'
         });
-        Post.belongsTo(models.Profile,{
+        Profile.hasMany(models.Post, {
             onDelete: 'cascade',
-            foreignKey:'profile_img_id'
+            foreignKey: 'id'
         })
     }
 
     sequelize.sync().then(() => {
-        console.log('Posts table has been re-created now if not exists')
+        console.log('Profile table has been re-created now if not exists')
     }).catch(error => {
         console.log('This error occured', error)
     });
-    return Post;
+    return Profile;
 }

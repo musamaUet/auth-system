@@ -1,8 +1,10 @@
 const db = require('../models');
 const Post = db.posts;
 const User = db.users;
+const Profile = db.profile;
 const Op = db.Sequelize.Op;
 const util = require('../util/util');
+const fs=require('fs');
 
 /**
     Calling of middleware functions
@@ -35,9 +37,11 @@ exports.create = (req, res) => {
         res.status(400).send({ message: 'Content Cant be empty' });
         return;
     }
+    req.session.postTitle=req.body.title;
     const post = {
         title: req.body.title,
         description: req.body.description,
+        profile_img_id:req.session.profile_img_id,
         published: req.body.published ? req.body.published : false,
         post_username: req.session.Auth
     }
@@ -156,18 +160,16 @@ exports.getSignup = (req, res) => {
     res.status(200).json({ message: 'Enter signup credentials' })
 };
 
-exports.postSignup = async  (req, res) => {
-    var username = await req.body.username;
-    var email =  await req.body.email;
+exports.postSignup = async (req, res) => {
 
     var emailVal = await util.checkEmailValidation(req.body.email);
     var usernameVal = await util.checkUsernameValidation(req.body.username);
-    var passVal =  await util.checkPasswordValidation(req.body.password);
-    var password= await util.hashPassword(req.body.password);
+    var passVal = await util.checkPasswordValidation(req.body.password);
+    var password = await util.hashPassword(req.body.password);
 
-    if(emailVal){
-        if(usernameVal){
-            if(passVal){
+    if (emailVal) {
+        if (usernameVal) {
+            if (passVal) {
                 User.create({
                     username: req.body.username,
                     email: req.body.email,
@@ -175,17 +177,17 @@ exports.postSignup = async  (req, res) => {
                 }).then(user => {
                     console.log(user);
                     req.session.user = user.dataValues;
-                    req.session.Auth= req.body.username;
+                    req.session.Auth = req.body.username;
                     res.status(201).json({ message: 'Congratulations you are sinedUp and logged in successfully' });
                 })
-            }else{
-                res.status(505).json({ message: 'The password validation failed,'+util.passwordMessage });
+            } else {
+                res.status(505).json({ message: 'The password validation failed,' + util.passwordMessage });
             }
-        }else{
-            res.status(505).json({ message: 'This username is already registered, choose another' });   
+        } else {
+            res.status(505).json({ message: 'This username is already registered, choose another' });
         }
-    }else{
-        res.status(505).json({ message: 'This email is already registered, choose another' });   
+    } else {
+        res.status(505).json({ message: 'This email is already registered, choose another' });
     }
 };
 
@@ -235,3 +237,31 @@ exports.getLogout = (req, res) => {
     }
 };
 
+// route for Profile Uploadation
+exports.uploadFiles = async (req, res) => {
+    try{
+        console.log('Call from upload files',req.file);
+        if(req.file == undefined ){
+            return res.status(500).send({message:'You must have to select a file'});
+        }
+
+        //console.log('req of id',req.params.id);
+        const profileUsername = req.session.Auth;
+        Profile.create({
+            type:req.body.mimetype,
+            name:req.file.originalname,
+            post_username:profileUsername,
+            data:fs.readFileSync(__dirname + "/../uploads/" + req.file.filename),
+        }).then(image=>{
+            fs.writeFileSync(__dirname + "/../uploads/" + image.name, image.data);
+            req.session.profile_img_id = image.id;
+            console.log('req of image id',image.id);
+
+            return res.status(201).send({message:'Image file has been uploaded successfully'});
+        });
+    } catch(error){
+        console.log(error);
+        return res.send(`Error when trying upload images: ${error}`);
+    }
+
+}
